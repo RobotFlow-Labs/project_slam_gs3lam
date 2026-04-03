@@ -2,7 +2,7 @@
 
 > Module: SLAM-GS3LAM | Priority: P0
 > Depends on: PRD-03
-> Status: ⬜ Not started
+> Status: ✅ Complete
 
 ## Objective
 Evaluation code reproduces the paper’s rendering, tracking, runtime, and semantic-reconstruction metrics and emits a gap report against Tables 1-4, 6-7, and 9.
@@ -12,11 +12,11 @@ GS3LAM reports PSNR, SSIM, LPIPS, ATE RMSE, mIoU, and runtime/FPS on Replica and
 **Paper reference**: §4.1.2, §4.2-§4.5, Tables 1-4, App C.2-C.3, Tables 6-9
 
 ## Acceptance Criteria
-- [ ] Replica averages can be computed for PSNR, SSIM, LPIPS, ATE, and mIoU
-- [ ] ScanNet averages can be computed for PSNR, SSIM, LPIPS, and ATE
-- [ ] Runtime report includes per-iteration, per-frame, and FPS metrics
-- [ ] Evaluation report prints paper value, reproduced value, and delta
-- [ ] Test: `uv run pytest tests/test_metrics.py tests/test_eval_reports.py -v` passes
+- [x] Replica averages can be computed for PSNR, SSIM, LPIPS, ATE, and mIoU
+- [x] ScanNet averages can be computed for PSNR, SSIM, LPIPS, and ATE
+- [x] Runtime report includes per-iteration, per-frame, and FPS metrics
+- [x] Evaluation report prints paper value, reproduced value, and delta
+- [x] Test: `uv run pytest tests/test_metrics.py tests/test_eval_reports.py -v` passes
 
 ## Files to Create
 | File | Purpose | Paper Ref | Est. Lines |

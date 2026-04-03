@@ -2,7 +2,7 @@
 
 > Module: SLAM-GS3LAM | Priority: P0
 > Depends on: PRD-02
-> Status: ⬜ Not started
+> Status: ✅ Complete
 
 ## Objective
 The online GS3LAM loop reproduces frame-to-model tracking, adaptive Gaussian expansion, DSR-aware mapping, and RSKM keyframe optimization.

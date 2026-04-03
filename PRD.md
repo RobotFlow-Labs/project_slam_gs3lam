@@ -1,7 +1,7 @@
 # SLAM-GS3LAM: GS3LAM: Gaussian Semantic Splatting SLAM — Implementation PRD
 ## ANIMA Wave-7 Module
 
-**Status:** PRD Suite Generated  
+**Status:** Implementation In Progress  
 **Version:** 0.2  
 **Date:** 2026-04-03  
 **Correct Paper:** GS3LAM: Gaussian Semantic Splatting SLAM  
@@ -131,12 +131,12 @@ GS3LAM is a dense semantic RGB-D SLAM system built around a Semantic Gaussian Fi
 ## 12. Build Plan
 | PRD# | Task | Status |
 |---|---|---|
-| [PRD-01](prds/PRD-01-foundation.md) | Foundation & Config | ⬜ |
-| [PRD-02](prds/PRD-02-core-model.md) | Core Model | ⬜ |
-| [PRD-03](prds/PRD-03-inference.md) | Inference | ⬜ |
-| [PRD-04](prds/PRD-04-evaluation.md) | Evaluation | ⬜ |
-| [PRD-05](prds/PRD-05-api-docker.md) | API & Docker | ⬜ |
-| [PRD-06](prds/PRD-06-ros2-integration.md) | ROS2 Integration | ⬜ |
+| [PRD-01](prds/PRD-01-foundation.md) | Foundation & Config | ✅ |
+| [PRD-02](prds/PRD-02-core-model.md) | Core Model | ✅ |
+| [PRD-03](prds/PRD-03-inference.md) | Inference | ✅ |
+| [PRD-04](prds/PRD-04-evaluation.md) | Evaluation | ✅ |
+| [PRD-05](prds/PRD-05-api-docker.md) | API & Docker | 🟡 |
+| [PRD-06](prds/PRD-06-ros2-integration.md) | ROS2 Integration | 🟡 |
 | [PRD-07](prds/PRD-07-production.md) | Production | ⬜ |
 
 ## 13. Task Breakdown

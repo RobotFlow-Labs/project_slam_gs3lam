@@ -1,19 +1,84 @@
 [project]
-name = "anima-tsukuyomi"
-codename = "TSUKUYOMI"
-functional_name = "SLAM-gs3lam"
+name = "anima-slam-gs3lam"
+codename = "SLAM-GS3LAM"
+functional_name = "Gaussian Semantic Splatting SLAM"
 wave = 7
-paper_arxiv = "2503.15909"
+paper_arxiv = "2603.27781"
+python_version = "3.11"
 
 [compute]
 backend = "auto"  # "mlx", "cuda", "auto"
 precision = "fp32"
+prefer_mlx_on_mac = true
+prefer_cuda_on_linux = true
 
 [data]
 shared_volume = "/Volumes/AIFlowDev/RobotFlowLabs/datasets"
 repos_volume = "/Volumes/AIFlowDev/RobotFlowLabs/repos/wave7"
+dataset_root_rel = "datasets/slam/gs3lam"
+model_root_rel = "models/slam/gs3lam"
 
-[hardware]
-zed2i = true
-unitree_l2_lidar = true
-cobot_xarm6 = false  # Set true when purchased
+[paper_defaults]
+replica_tracking_iterations = 40
+replica_mapping_iterations = 60
+scannet_tracking_iterations = 100
+scannet_mapping_iterations = 30
+tum_tracking_iterations = 360
+tum_mapping_iterations = 150
+tracking_rotation_lr = 0.0004
+tracking_translation_lr = 0.002
+
+[repo_overrides.scannet]
+tracking_iterations = 200
+mapping_iterations = 60
+
+[dataset_presets.replica]
+name = "replica"
+sequence = "office0"
+root = "/mnt/forge-data/datasets/slam/gs3lam/Replica"
+desired_image_height = 680
+desired_image_width = 1200
+
+[dataset_presets.replica.camera]
+image_height = 680
+image_width = 1200
+fx = 600.0
+fy = 600.0
+cx = 599.5
+cy = 339.5
+png_depth_scale = 6553.5
+crop_edge = 0
+
+[dataset_presets.scannet]
+name = "scannet"
+sequence = "scene0059_00"
+root = "/mnt/forge-data/datasets/slam/gs3lam/scannet"
+desired_image_height = 480
+desired_image_width = 640
+
+[dataset_presets.scannet.camera]
+image_height = 968
+image_width = 1296
+fx = 1169.621094
+fy = 1167.105103
+cx = 646.295044
+cy = 489.927032
+png_depth_scale = 1000.0
+crop_edge = 0
+
+[dataset_presets.tum]
+name = "tum"
+sequence = "rgbd_dataset_freiburg1_desk"
+root = "/mnt/forge-data/datasets/slam/gs3lam/TUM-DEVA"
+desired_image_height = 480
+desired_image_width = 640
+
+[dataset_presets.tum.camera]
+image_height = 480
+image_width = 640
+fx = 517.3
+fy = 516.5
+cx = 318.6
+cy = 255.3
+png_depth_scale = 5000.0
+crop_edge = 8

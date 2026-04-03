@@ -1,0 +1,20 @@
+[runtime]
+session_id = "ros2"
+dataset_name = "replica"
+sequence = "live"
+
+[qos]
+depth = 10
+
+[frames]
+map = "map"
+camera = "camera_link"
+
+[topics]
+rgb = "/camera/rgb/image"
+depth = "/camera/depth/image"
+camera_info = "/camera/info"
+semantic = "/perception/semantic_labels"
+pose = "/slam/pose"
+semantic_map = "/slam/semantic_map"
+diagnostics = "/slam/diagnostics"

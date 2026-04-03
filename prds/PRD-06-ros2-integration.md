@@ -2,7 +2,7 @@
 
 > Module: SLAM-GS3LAM | Priority: P1
 > Depends on: PRD-05
-> Status: ⬜ Not started
+> Status: 🟡 In progress
 
 ## Objective
 GS3LAM runs as a ROS2 component that subscribes to RGB-D and semantic streams and publishes poses, pointwise semantic field snapshots, and diagnostics for ANIMA robotics stacks.
@@ -12,10 +12,10 @@ The paper assumes RGB-D plus semantics as input. ANIMA requires the same multimo
 **Paper reference**: §3.1 "process RGB-D data with ... 2D semantic labels"; §4.1.2 datasets
 
 ## Acceptance Criteria
-- [ ] ROS2 node subscribes to image, depth, intrinsics, and semantic topics
-- [ ] Node publishes pose estimates, rendered semantic map, and diagnostics
+- [x] ROS2 node subscribes to image, depth, intrinsics, and semantic topics
+- [x] Node publishes pose estimates, rendered semantic map, and diagnostics
 - [ ] Launch file supports replay from bag files and live RGB-D topics
-- [ ] Test: `uv run pytest tests/test_ros2_contracts.py -v` passes
+- [x] Test: `uv run pytest tests/test_ros2_contracts.py -v` passes
 
 ## Files to Create
 | File | Purpose | Paper Ref | Est. Lines |

@@ -2,7 +2,7 @@
 
 > Module: SLAM-GS3LAM | Priority: P0
 > Depends on: PRD-01
-> Status: ⬜ Not started
+> Status: ✅ Complete
 
 ## Objective
 The Semantic Gaussian Field, differentiable semantic splatting path, and decoder are implemented with the same data model as GS3LAM.

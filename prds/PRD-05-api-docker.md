@@ -2,7 +2,7 @@
 
 > Module: SLAM-GS3LAM | Priority: P1
 > Depends on: PRD-03
-> Status: ⬜ Not started
+> Status: 🟡 In progress
 
 ## Objective
 GS3LAM is callable as a service with a reproducible containerized runtime that can ingest RGB-D-semantics frames and return poses plus rendered outputs.
@@ -12,11 +12,11 @@ The paper is offline/research oriented, but ANIMA requires a service boundary th
 **Paper reference**: §3.1-§3.4 for runtime behavior; App C.2 for timing expectations
 
 ## Acceptance Criteria
-- [ ] FastAPI app exposes health, load-scene, step-frame, and snapshot endpoints
-- [ ] Request/response schemas include pose, RGB render, depth render, semantic logits, and timing
+- [x] FastAPI app exposes health, load-scene, step-frame, and snapshot endpoints
+- [x] Request/response schemas include pose, RGB render, depth render, semantic logits, and timing
 - [ ] CUDA-enabled Docker image builds and launches the service
 - [ ] Smoke test can run a 5-frame sequence in-container
-- [ ] Test: `uv run pytest tests/test_api.py -v` passes
+- [x] Test: `uv run pytest tests/test_api.py -v` passes
 
 ## Files to Create
 | File | Purpose | Paper Ref | Est. Lines |
