@@ -19,65 +19,64 @@ This module covers exactly one paper: `GS3LAM: Gaussian Semantic Splatting SLAM`
 - **Repo**: https://github.com/lif314/GS3LAM
 - **Correct local PDF**: `papers/2603.27781_GS3LAM.pdf`
 - **Invalid local PDF to ignore**: `papers/2503.15909_GS3LAM.pdf`
-- **Verification status**: identity ✅ | repo inspected ✅ | planning aligned ✅ | runtime reproduction ⬜
+- **Verification status**: identity ✅ | repo inspected ✅ | planning aligned ✅ | CUDA training ✅ | runtime reproduction ⬜
 
 ## 3. Current Status
 - **Date**: 2026-04-03
-- **Phase**: PRD-01 through PRD-04 complete, PRD-05 and PRD-06 in local verification state
-- **MVP Readiness**: 68%
+- **Phase**: CUDA training running on GPU 2 (office2, 2000 frames)
+- **MVP Readiness**: 75%
 - **Accomplished**:
-  1. Replaced stale `TSUKUYOMI` package metadata with `anima_slam_gs3lam`
-  2. Updated `pyproject.toml` for Python `3.11` and added Mac/CUDA-aware dependency groups
-  3. Added typed GS3LAM config surface with paper defaults and explicit repo overrides
-  4. Ported Replica, ScanNet, and TUM dataset contracts/loaders into the module package
-  5. Implemented SG-Field, semantic decoder, rasterizer wrapper, DSR utilities, and tracking/mapping loop
-  6. Added evaluation metrics, paper-target gap reporting, FastAPI service endpoints, and CUDA-ready Docker scaffolding
-  7. Added ROS2 topic contracts, config, node shim, and launch scaffolding without requiring `rclpy` on Mac
-  8. Verified `uv sync --python 3.11 --extra dev`
-  9. Verified `uv run --python 3.11 pytest -q`
-  10. Verified `uv run --python 3.11 pytest tests/test_api.py -v`
-  11. Verified `uv run --python 3.11 pytest tests/test_ros2_contracts.py -v`
-  12. Verified `uv run --python 3.11 python -m anima_slam_gs3lam.eval.report --paper-targets ASSETS.md`
-  13. Verified `uv run --python 3.11 ruff check src/ tests/ scripts/ launch/`
+  1. All PRD-01 through PRD-07 code complete
+  2. Code review: fixed 6 critical bugs (no optimizer, pose convention, device handling, depth shape)
+  3. Built gaussian-semantic-rasterization CUDA extension (sm_89 for L4)
+  4. Shared CUDA rasterizer at `/mnt/forge-data/modules/03_wave7/shared_slam_cuda/`
+  5. CUDA smoke test passed: 5 frames, PSNR=16.45, ATE=3.54cm
+  6. Full training launched: office2, 2000 frames, nohup+disown, PID in train.pid
+  7. 62/62 tests pass, ruff clean
+- **Training details**:
+  - Scene: office2 (complete 4x4 traj, 2000 frames)
+  - GPU: CUDA_VISIBLE_DEVICES=2, NVIDIA L4 23GB
+  - Config: 40 tracking iters, 60 mapping iters (paper defaults)
+  - Log: `/mnt/artifacts-datai/logs/project_slam_gs3lam/train_office2_20260403_1311.log`
+  - Checkpoints: `/mnt/artifacts-datai/checkpoints/project_slam_gs3lam/office2/`
 - **Immediate Next Tasks**:
-  1. Verify `docker/Dockerfile.cuda` and `docker/docker-compose.api.yml` on a Linux/CUDA host
-  2. Verify `launch/gs3lam.launch.py` and the ROS2 node on a real ROS2 host with `rclpy`
-  3. Add `anima_module.yaml` for ANIMA-native module registration
-  4. Add export/regression gates from PRD-07
+  1. Monitor training completion
+  2. Run remaining scenes (room0-2, office0-1, office3-4) — need traj format handling
+  3. Export: pth → safetensors → ONNX → TRT fp16 → TRT fp32
+  4. Push to HuggingFace: ilessio-aiflowlab/project_slam_gs3lam
+  5. Run /anima-hf-strategy
 - **Blockers**:
-  1. Benchmark datasets are not present locally or on shared storage
-  2. CUDA rasterizer cannot be compiled on this Mac; Linux/CUDA path must remain optional until GPU server execution
-  3. No pretrained checkpoints are available yet
+  1. room0-2, office0-1 have TUM quaternion traj (500 lines) — loader now handles both formats with interpolation but accuracy may suffer vs native 4x4 format
+  2. ScanNet data not available on server
+  3. TUM-DEVA pseudo labels not available
 
 ## 4. Data / Weights Preflight
-- **Environment detected**: `MAC_LOCAL`
-- **Datasets present**: none
-- **Weights present**: none
-- **Reference repo present**: `repositories/GS3LAM/`
-- **ANIMA infra present**:
-  - `pyproject.toml` ✅
-  - `configs/default.toml` ✅
-  - `tests/` ✅
-  - `anima_module.yaml` ⬜
-  - `Dockerfile.serve` ⬜
-  - `docker-compose.serve.yml` ⬜
-  - `docker/Dockerfile.cuda` ✅
-  - `docker/docker-compose.api.yml` ✅
-  - `src/anima_slam_gs3lam/serve.py` ✅
+- **Environment detected**: `GPU_SERVER`
+- **Datasets present**:
+  - GS3LAM Replica (processed): `/mnt/forge-data/datasets/slam/gs3lam/Replica/` — 8 scenes, 2000 frames each ✅
+  - Replica SLAM (rendered): `/mnt/forge-data/datasets/replica_slam/` — 6 scenes, 250 frames/agent ✅ (no semantics)
+  - Shared symlink: `/mnt/forge-data/datasets/replica_rgbd/` → gs3lam Replica data
+- **Weights present**: none needed (trained from scratch per-scene)
+- **CUDA rasterizer**: built and installed ✅
+  - Shared at: `/mnt/forge-data/modules/03_wave7/shared_slam_cuda/gaussian_semantic_rasterization/`
 
-## 5. Hardware Notes
-- Mac Studio / Apple Silicon: active local development target
-- CUDA / Linux server: required for paper-faithful rasterizer execution and training
-- Keep dual-path design:
-  - local path: package import, config, tests, CPU/MPS-safe code
-  - server path: CUDA extension build, training, benchmarking
+## 5. Critical Bugs Fixed (2026-04-03)
+| Bug | File | Fix |
+|-----|------|-----|
+| No optimizer/backward in SLAM loop | pipeline/slam_loop.py | Added tracking optimizer (pose quat+trans), mapping optimizer (field+decoder) with per-param LR |
+| Pose convention conflict | rendering/rasterizer.py | Fixed: compute w2c from c2w pose, correct cam_center extraction |
+| Fallback renderer wrong transform | rendering/rasterizer.py | Use w2c (not c2w) for world→camera projection |
+| CUDA depth/opacity unsqueeze double | rendering/rasterizer.py | Check ndim before unsqueeze — CUDA rasterizer already returns [1,H,W] |
+| FrameBatch no .to(device) | types.py | Added .to() method returning new FrameBatch |
+| Decoder/field not on CUDA | pipeline/slam_loop.py | Device param in GS3LAMLoop, .to(device) in bootstrap |
+| Semantic glob matches vis_ files | datasets/replica.py | Filter out vis_sem_class_*.png |
+| Traj format mismatch | datasets/replica.py | Support both 4x4 matrix and TUM quaternion formats with interpolation |
 
 ## 6. Session Log
 | Date | Agent | What Happened |
 |------|-------|---------------|
 | 2026-04-03 | ANIMA Research Agent | Initial scaffold created |
 | 2026-04-03 | Codex | Added PRD suite, tasks, corrected paper identity, vendored reference repo |
-| 2026-04-03 | Codex | Completed PRD-01: package rename, typed config, dataset loaders, Python 3.11 `uv` verification |
-| 2026-04-03 | Codex | Completed PRD-02 and PRD-03: SG-Field core, rasterizer wrapper, tracking/mapping loop, Replica smoke runner |
-| 2026-04-03 | Codex | Completed PRD-04 and local PRD-05 API slice: evaluation reports, FastAPI service layer, Docker scaffolding |
-| 2026-04-03 | Codex | Completed local PRD-06 contracts: ROS2 topic helpers, node shim, config, and launch scaffold |
+| 2026-04-03 | Codex | Completed PRD-01 through PRD-06, API, ROS2, Docker scaffolding |
+| 2026-04-03 | Codex | Added Docker serve infra, training script, export pipeline, release checks |
+| 2026-04-03 | Opus | Fixed 6 critical bugs, built CUDA rasterizer, started GPU training |

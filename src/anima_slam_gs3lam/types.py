@@ -50,6 +50,17 @@ class FrameBatch(NamedTuple):
     frame_id: int
     sequence: str
 
+    def to(self, device: torch.device | str) -> FrameBatch:
+        return FrameBatch(
+            rgb=self.rgb.to(device),
+            depth=self.depth.to(device),
+            semantic=self.semantic.to(device),
+            intrinsics=self.intrinsics.to(device),
+            pose=self.pose.to(device),
+            frame_id=self.frame_id,
+            sequence=self.sequence,
+        )
+
     def validate(self) -> None:
         if self.rgb.ndim != 3 or self.rgb.shape[0] != 3:
             raise ValueError("rgb must have shape [3, H, W]")

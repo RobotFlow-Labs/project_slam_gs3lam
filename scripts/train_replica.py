@@ -58,10 +58,11 @@ def main() -> None:
         sequence_override=args.scene,
     )
 
+    device = torch.device(args.device)
     logger.info("[CONFIG] Scene: %s", args.scene)
     logger.info("[CONFIG] Tracking iters: %d, Mapping iters: %d",
                 runtime.tracking.iterations, runtime.mapping.iterations)
-    logger.info("[CONFIG] Device: %s", args.device)
+    logger.info("[CONFIG] Device: %s", device)
     logger.info("[CONFIG] Version: %s", __version__)
 
     # Load dataset
@@ -70,19 +71,43 @@ def main() -> None:
     logger.info("[DATA] %s frames in scene %s, processing %d",
                 len(dataset), args.scene, total_frames)
 
-    # Initialize SLAM loop
-    loop = GS3LAMLoop(
-        semantic_dim=config.paper_defaults.semantic.feature_dim,
-        semantic_classes=config.paper_defaults.semantic.class_dim,
-        keyframe_window=runtime.mapping.mapping_window_size,
-    )
-
-    # Device
-    device = torch.device(args.device)
+    # GPU info
     if device.type == "cuda":
         gpu_name = torch.cuda.get_device_name(0)
         gpu_mem = torch.cuda.get_device_properties(0).total_memory / 1024**3
         logger.info("[GPU] %s (%.1f GB)", gpu_name, gpu_mem)
+
+    # Build loss weight dicts from config
+    track_w = runtime.tracking.loss_weights
+    map_w = runtime.mapping.loss_weights
+    map_lr = runtime.mapping.learning_rates
+
+    # Initialize SLAM loop with config-driven parameters
+    loop = GS3LAMLoop(
+        semantic_dim=config.paper_defaults.semantic.feature_dim,
+        semantic_classes=config.paper_defaults.semantic.class_dim,
+        keyframe_window=runtime.mapping.mapping_window_size,
+        tracking_iterations=runtime.tracking.iterations,
+        mapping_iterations=runtime.mapping.iterations,
+        tracking_rotation_lr=runtime.tracking.pose_rotation_lr,
+        tracking_translation_lr=runtime.tracking.pose_translation_lr,
+        tracking_loss_weights={
+            "color": track_w.color, "depth": track_w.depth, "semantic": track_w.semantic,
+        },
+        mapping_loss_weights={
+            "color": map_w.color, "depth": map_w.depth, "semantic": map_w.semantic,
+            "big_scale": map_w.big_scale, "small_scale": map_w.small_scale,
+        },
+        mapping_lr={
+            "means3d": map_lr.means3d,
+            "rgb_colors": map_lr.rgb_colors,
+            "unnorm_rotations": map_lr.unnorm_rotations,
+            "logit_opacities": map_lr.logit_opacities,
+            "log_scales": map_lr.log_scales,
+            "obj_dc": map_lr.obj_dc,
+        },
+        device=device,
+    )
 
     # Run SLAM loop
     render_metrics_list = []
@@ -95,6 +120,7 @@ def main() -> None:
 
     for frame_idx in tqdm(range(total_frames), desc=f"GS3LAM {args.scene}"):
         frame = dataset[frame_idx]
+        # frame.to(device) is handled inside loop.step()
         frame_start = time.perf_counter()
         result = loop.step(frame)
         frame_end = time.perf_counter()
@@ -107,28 +133,36 @@ def main() -> None:
             "frame": frame_idx,
             "frame_ms": round(frame_ms, 2),
             "new_gaussians": int(result["new_gaussians"]),
+            "total_gaussians": int(result.get("total_gaussians", 0)),
         }
-        if result.get("tracking_loss") is not None:
-            tl = result["tracking_loss"]
-            entry["tracking_loss"] = float(tl.detach().cpu()) if torch.is_tensor(tl) else float(tl)
-        if result.get("mapping_loss") is not None:
-            ml = result["mapping_loss"]
-            entry["mapping_loss"] = float(ml.detach().cpu()) if torch.is_tensor(ml) else float(ml)
+        if "tracking_loss" in result:
+            entry["tracking_loss"] = float(result["tracking_loss"])
+        if "mapping_loss" in result:
+            entry["mapping_loss"] = float(result["mapping_loss"])
 
         # Eval every N frames
         if frame_idx > 0 and frame_idx % args.eval_every == 0:
             with torch.no_grad():
+                frame_dev = frame.to(device)
                 render = loop.state.field(
-                    pose=frame.pose,
-                    intrinsics=frame.intrinsics,
-                    image_size=tuple(frame.depth.shape[-2:]),
+                    pose=frame_dev.pose,
+                    intrinsics=frame_dev.intrinsics,
+                    image_size=tuple(frame_dev.depth.shape[-2:]),
                 )
-                rm = rendering_metrics(render.rgb, frame.rgb, render.depth, frame.depth)
+                rm = rendering_metrics(render.rgb.cpu(), frame.rgb, render.depth.cpu(), frame.depth)
                 render_metrics_list.append(rm)
                 entry["psnr"] = rm.psnr
                 entry["ssim"] = rm.ssim
 
         history.append(entry)
+
+        if frame_idx % 50 == 0 and frame_idx > 0:
+            avg_ms = sum(frame_times[-50:]) / len(frame_times[-50:])
+            logger.info("[STEP %d] %.0fms/frame, N=%d gaussians, track=%.4f map=%.4f",
+                        frame_idx, avg_ms,
+                        result.get("total_gaussians", 0),
+                        entry.get("tracking_loss", 0),
+                        entry.get("mapping_loss", 0))
 
         # Checkpoint
         if frame_idx > 0 and frame_idx % args.ckpt_every == 0:
@@ -146,7 +180,7 @@ def main() -> None:
 
     # Compute aggregate metrics
     agg_render = aggregate_rendering_metrics(render_metrics_list)
-    est_poses_t = torch.stack(loop.state.poses)
+    est_poses_t = torch.stack([p.cpu() for p in loop.state.poses])
     gt_poses_t = torch.stack(gt_poses)
     ate = ate_rmse_cm(est_poses_t, gt_poses_t)
     avg_fps = 1000.0 / (sum(frame_times) / len(frame_times)) if frame_times else 0.0

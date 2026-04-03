@@ -49,8 +49,10 @@ def _render_with_extension(field, *, pose: torch.Tensor, intrinsics: torch.Tenso
     fx, fy = intrinsics[0, 0], intrinsics[1, 1]
     cx, cy = intrinsics[0, 2], intrinsics[1, 2]
 
-    cam_center = torch.inverse(pose)[:3, 3]
-    viewmatrix = pose.T.contiguous()
+    # pose is c2w (camera-to-world). Rasterizer needs w2c in column-major.
+    w2c = torch.inverse(pose)
+    cam_center = pose[:3, 3]
+    viewmatrix = w2c.T.contiguous()
     proj = torch.tensor(
         [
             [2 * fx / width, 0.0, -(width - 2 * cx) / width, 0.0],
@@ -87,7 +89,12 @@ def _render_with_extension(field, *, pose: torch.Tensor, intrinsics: torch.Tenso
         scales=field.scales(),
         means2D=means2d,
     )
-    return RenderOutputs(rgb=rgb, depth=depth.unsqueeze(0), semantic_feature=semantic_feature, opacity=opacity.unsqueeze(0))
+    # CUDA rasterizer already returns depth and opacity as [1, H, W]
+    if depth.ndim == 2:
+        depth = depth.unsqueeze(0)
+    if opacity.ndim == 2:
+        opacity = opacity.unsqueeze(0)
+    return RenderOutputs(rgb=rgb, depth=depth, semantic_feature=semantic_feature, opacity=opacity)
 
 
 def _render_with_torch_fallback(field, *, pose: torch.Tensor, intrinsics: torch.Tensor, image_size: tuple[int, int]) -> RenderOutputs:
@@ -99,7 +106,9 @@ def _render_with_torch_fallback(field, *, pose: torch.Tensor, intrinsics: torch.
         [field.means3d, torch.ones(field.num_gaussians, 1, device=device, dtype=dtype)],
         dim=-1,
     )
-    camera_points = (pose @ homogeneous.T).T[:, :3]
+    # pose is c2w; we need w2c to project world points into camera space
+    w2c = torch.inverse(pose)
+    camera_points = (w2c @ homogeneous.T).T[:, :3]
     z = camera_points[:, 2].clamp_min(1e-6)
     x = camera_points[:, 0] / z
     y = camera_points[:, 1] / z
