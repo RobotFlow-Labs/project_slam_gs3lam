@@ -13,8 +13,8 @@ prefer_mlx_on_mac = true
 prefer_cuda_on_linux = true
 
 [data]
-shared_volume = "/Volumes/AIFlowDev/RobotFlowLabs/datasets"
-repos_volume = "/Volumes/AIFlowDev/RobotFlowLabs/repos/wave7"
+shared_volume = "/mnt/forge-data"
+repos_volume = "/mnt/forge-data/repos"
 dataset_root_rel = "datasets/slam/gs3lam"
 model_root_rel = "models/slam/gs3lam"
 
@@ -69,7 +69,7 @@ crop_edge = 0
 [dataset_presets.tum]
 name = "tum"
 sequence = "rgbd_dataset_freiburg1_desk"
-root = "/mnt/forge-data/datasets/slam/gs3lam/TUM-DEVA"
+root = "/mnt/forge-data/datasets/tum"
 desired_image_height = 480
 desired_image_width = 640
 

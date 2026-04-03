@@ -279,7 +279,7 @@ def default_config() -> GS3LAMConfig:
             "scannet": DatasetPreset(
                 name="scannet",
                 sequence="scene0059_00",
-                root="/mnt/forge-data/datasets/slam/gs3lam/scannet",
+                root="/mnt/forge-data/datasets/scannet",
                 desired_image_height=480,
                 desired_image_width=640,
                 camera=CameraConfig(
@@ -295,7 +295,7 @@ def default_config() -> GS3LAMConfig:
             "tum": DatasetPreset(
                 name="tum",
                 sequence="rgbd_dataset_freiburg1_desk",
-                root="/mnt/forge-data/datasets/slam/gs3lam/TUM-DEVA",
+                root="/mnt/forge-data/datasets/tum",
                 desired_image_height=480,
                 desired_image_width=640,
                 camera=CameraConfig(

@@ -63,8 +63,11 @@ def main() -> None:
     for last_step, frame in enumerate(tqdm(frame_iter, total=args.max_frames, desc="GS3LAM Replica")):
         loop.step(frame)
 
-    checkpoint = loop.save_checkpoint(args.output_dir, step_idx=last_step)
-    print(f"checkpoint={checkpoint}")
+    if loop.state.field is not None:
+        checkpoint = loop.save_checkpoint(args.output_dir, step_idx=last_step)
+        print(f"checkpoint={checkpoint}")
+    else:
+        print("No frames processed — no checkpoint saved.")
 
 
 if __name__ == "__main__":

@@ -50,7 +50,7 @@ def _render_with_extension(field, *, pose: torch.Tensor, intrinsics: torch.Tenso
     cx, cy = intrinsics[0, 2], intrinsics[1, 2]
 
     cam_center = torch.inverse(pose)[:3, 3]
-    viewmatrix = pose.unsqueeze(0).transpose(1, 2)
+    viewmatrix = pose.T.contiguous()
     proj = torch.tensor(
         [
             [2 * fx / width, 0.0, -(width - 2 * cx) / width, 0.0],
@@ -60,8 +60,8 @@ def _render_with_extension(field, *, pose: torch.Tensor, intrinsics: torch.Tenso
         ],
         dtype=pose.dtype,
         device=pose.device,
-    ).unsqueeze(0).transpose(1, 2)
-    full_proj = viewmatrix.bmm(proj)
+    ).T.contiguous()
+    full_proj = (viewmatrix @ proj).contiguous()
 
     settings = GaussianRasterizationSettings(
         image_height=height,

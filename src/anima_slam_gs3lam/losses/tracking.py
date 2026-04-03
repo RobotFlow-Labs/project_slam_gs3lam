@@ -34,7 +34,7 @@ def tracking_loss(
         semantic_logits.unsqueeze(0),
         target_semantic.unsqueeze(0).long(),
         reduction="none",
-    )[observed_mask].mean()
+    )[0][observed_mask].mean()
     semantic_term = semantic_loss / torch.log(torch.tensor(semantic_logits.shape[0], device=semantic_logits.device, dtype=semantic_logits.dtype))
 
     total = (
