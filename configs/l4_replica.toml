@@ -1,6 +1,6 @@
 # L4-tuned config for Replica (23GB VRAM)
-# Reduced iterations + smaller init to fit in memory
-# Paper uses 40/60 on RTX 3090 (24GB) — we scale down for safety margin
+# Reduced resolution + iterations to fit in VRAM
+# Paper uses 40/60 at 1200x680 on RTX 3090 — we halve resolution for L4
 
 [project]
 name = "anima-slam-gs3lam"
@@ -10,3 +10,20 @@ replica_tracking_iterations = 20
 replica_mapping_iterations = 15
 tracking_rotation_lr = 0.0004
 tracking_translation_lr = 0.002
+
+[dataset_presets.replica]
+name = "replica"
+sequence = "office0"
+root = "/mnt/forge-data/datasets/slam/gs3lam/Replica"
+desired_image_height = 340
+desired_image_width = 600
+
+[dataset_presets.replica.camera]
+image_height = 680
+image_width = 1200
+# Intrinsics scaled by 0.5 for half-resolution rendering
+fx = 300.0
+fy = 300.0
+cx = 299.75
+cy = 169.75
+png_depth_scale = 6553.5
