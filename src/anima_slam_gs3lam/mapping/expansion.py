@@ -68,7 +68,7 @@ def expand_field_from_frame(
     frame: FrameBatch,
     unobserved_mask: torch.Tensor,
     *,
-    max_new_gaussians: int = 50000,
+    max_new_gaussians: int = 10000,
 ) -> int:
     """Append new Gaussians from unobserved RGB-D pixels.
 

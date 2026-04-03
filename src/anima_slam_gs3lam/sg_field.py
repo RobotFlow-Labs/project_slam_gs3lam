@@ -149,6 +149,24 @@ class SemanticGaussianField(nn.Module):
                 torch.cat([self.semantic_features, new_field.semantic_features], dim=0)
             )
 
+    def prune(self, mask: torch.Tensor) -> int:
+        """Remove Gaussians where mask is True. Returns number removed."""
+        keep = ~mask
+        n_before = self.num_gaussians
+        with torch.no_grad():
+            self.means3d = nn.Parameter(self.means3d[keep])
+            self.quaternions = nn.Parameter(self.quaternions[keep])
+            self.log_scales = nn.Parameter(self.log_scales[keep])
+            self.logit_opacities = nn.Parameter(self.logit_opacities[keep])
+            self.rgb = nn.Parameter(self.rgb[keep])
+            self.semantic_features = nn.Parameter(self.semantic_features[keep])
+        return n_before - self.num_gaussians
+
+    def prune_low_opacity(self, threshold: float = 0.01) -> int:
+        """Remove Gaussians with opacity below threshold."""
+        mask = self.opacities().squeeze(-1) < threshold
+        return self.prune(mask)
+
     def forward(
         self,
         pose: torch.Tensor,
