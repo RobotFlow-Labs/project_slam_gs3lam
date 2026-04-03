@@ -1,0 +1,79 @@
+version: "3.8"
+
+services:
+  # ── Full stack: ROS2 + FastAPI + GPU ──
+  gs3lam-serve:
+    build:
+      context: .
+      dockerfile: Dockerfile.serve
+    env_file: .env.serve
+    network_mode: host
+    volumes:
+      - /data/weights:/data/weights
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+    profiles:
+      - serve
+
+  # ── ROS2 only (for ANIMA compiler pipelines) ──
+  gs3lam-ros2:
+    build:
+      context: .
+      dockerfile: Dockerfile.serve
+    env_file: .env.serve
+    environment:
+      - ANIMA_ROS2_ONLY=true
+    network_mode: host
+    volumes:
+      - /data/weights:/data/weights
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+    profiles:
+      - ros2
+
+  # ── API only (debug / dev, no ROS2) ──
+  gs3lam-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.serve
+    env_file: .env.serve
+    environment:
+      - ANIMA_API_ONLY=true
+    network_mode: host
+    volumes:
+      - /data/weights:/data/weights
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+    profiles:
+      - api
+
+  # ── Test runner ──
+  gs3lam-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.serve
+    env_file: .env.serve
+    environment:
+      - ANIMA_DEVICE=cpu
+    network_mode: host
+    entrypoint: ["uv", "run", "pytest", "tests/", "-x", "-v"]
+    profiles:
+      - test

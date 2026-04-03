@@ -1,0 +1,76 @@
+name: slam-gs3lam
+version: 0.1.0
+description: "GS3LAM: Gaussian Semantic Splatting SLAM"
+domain: slam
+wave: 7
+paper:
+  title: "GS3LAM: Gaussian Semantic Splatting SLAM"
+  arxiv: "2603.27781"
+  venue: "ACM MM 2024"
+capabilities:
+  - semantic_slam
+  - pose_estimation
+  - 3d_reconstruction
+  - semantic_mapping
+inputs:
+  - name: rgb
+    type: image
+    format: "Tensor[3,H,W]"
+  - name: depth
+    type: depth_map
+    format: "Tensor[1,H,W]"
+  - name: semantic
+    type: label_map
+    format: "Tensor[H,W]"
+  - name: intrinsics
+    type: camera_intrinsics
+    format: "Tensor[3,3]"
+outputs:
+  - name: pose
+    type: camera_pose
+    format: "Tensor[4,4]"
+  - name: rendered_rgb
+    type: image
+    format: "Tensor[3,H,W]"
+  - name: rendered_depth
+    type: depth_map
+    format: "Tensor[1,H,W]"
+  - name: semantic_logits
+    type: semantic_map
+    format: "Tensor[256,H,W]"
+api:
+  port: 8080
+  endpoints:
+    - path: /health
+      method: GET
+    - path: /ready
+      method: GET
+    - path: /info
+      method: GET
+    - path: /v1/gs3lam/step
+      method: POST
+docker:
+  base_image: "ghcr.io/robotflow-labs/anima-serve:jazzy"
+  gpu: true
+  ports: [8080]
+ros2:
+  node_name: gs3lam_node
+  subscribers:
+    - topic: /camera/rgb/image
+      type: sensor_msgs/Image
+    - topic: /camera/depth/image
+      type: sensor_msgs/Image
+    - topic: /camera/info
+      type: sensor_msgs/CameraInfo
+    - topic: /perception/semantic_labels
+      type: sensor_msgs/Image
+  publishers:
+    - topic: /slam/pose
+      type: geometry_msgs/PoseStamped
+    - topic: /slam/semantic_map
+      type: sensor_msgs/Image
+    - topic: /slam/diagnostics
+      type: diagnostic_msgs/DiagnosticArray
+hf:
+  repo: ilessio-aiflowlab/project_slam_gs3lam
+  organization: ilessio-aiflowlab

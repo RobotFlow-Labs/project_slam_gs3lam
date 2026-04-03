@@ -1,0 +1,43 @@
+# ============================================================
+# Layer 3: anima-slam-gs3lam  (module-specific serving image)
+# ============================================================
+# Layer 1: anima-base:jazzy   = ros:jazzy + CycloneDDS + anima_msgs + uv
+# Layer 2: anima-serve:jazzy  = anima-base + anima_serve (FastAPI, health, weights)
+# Layer 3: this file          = anima-serve + module code + module node
+# ============================================================
+
+FROM ghcr.io/robotflow-labs/anima-serve:jazzy AS base
+
+LABEL maintainer="RobotFlow Labs <dev@robotflowlabs.com>"
+LABEL module="slam-gs3lam"
+LABEL description="GS3LAM: Gaussian Semantic Splatting SLAM"
+
+# --- System deps ---
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# --- Module code ---
+WORKDIR /app
+
+COPY pyproject.toml uv.lock* ./
+RUN uv sync --no-dev --frozen 2>/dev/null || uv sync --no-dev
+
+COPY src/ src/
+COPY configs/ configs/
+COPY anima_module.yaml ./
+
+# --- Runtime ---
+ENV ANIMA_MODULE_NAME=slam-gs3lam
+ENV ANIMA_MODULE_VERSION=0.1.0
+ENV ANIMA_SERVE_PORT=8080
+ENV ANIMA_DEVICE=auto
+ENV ANIMA_WEIGHT_FORMAT=auto
+ENV ANIMA_WEIGHT_DIR=/data/weights
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:${ANIMA_SERVE_PORT}/health || exit 1
+
+CMD ["uv", "run", "python", "-m", "anima_slam_gs3lam.serve"]
