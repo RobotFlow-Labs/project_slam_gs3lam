@@ -1,29 +1,28 @@
-# ANIMA TSUKUYOMI — SLAM-gs3lam
+# SLAM-GS3LAM — ANIMA Module
 
-> Wave-7 | Japanese Mythology Theme | Module #2
+> **GS3LAM: Gaussian Semantic SLAM**
+> Paper: [arXiv:2503.15909](https://arxiv.org/abs/2503.15909)
 
-## Paper
-**GS3LAM: Gaussian Semantic SLAM**
-- ArXiv: https://arxiv.org/abs/2503.15909
-- Repo: https://github.com/lif314/GS3LAM
+Part of the [ANIMA Intelligence Compiler Suite](https://github.com/RobotFlow-Labs) by AIFLOW LABS LIMITED.
 
-## Stack Fit
-PHANTOMAGIA
-
-## Quick Start
-
-```bash
-# Install dependencies
-uv pip install -e ".[dev]"
-
-# Run with MLX (Mac)
-ANIMA_BACKEND=mlx python -m anima_tsukuyomi
-
-# Run with CUDA (GPU server)
-ANIMA_BACKEND=cuda python -m anima_tsukuyomi
-```
+## Domain
+SLAM
 
 ## Status
-- Phase: Scaffold
-- MVP: 5%
-- Demo-ready: No
+- [ ] Paper read + ASSETS.md created
+- [ ] PRD-01 through PRD-07
+- [ ] Training pipeline
+- [ ] GPU training
+- [ ] Export: pth + safetensors + ONNX + TRT fp16 + TRT fp32
+- [ ] Push to HuggingFace
+- [ ] Docker serving
+
+## Quick Start
+```bash
+cd project_slam_gs3lam
+uv venv .venv --python python3.11 && uv sync
+uv run pytest tests/ -v
+```
+
+## License
+MIT — AIFLOW LABS LIMITED
