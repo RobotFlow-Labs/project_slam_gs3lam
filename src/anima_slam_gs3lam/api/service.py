@@ -45,10 +45,31 @@ class SessionService:
             root_override=request.root_override,
             sequence_override=request.sequence_override,
         )
+        track_w = runtime.tracking.loss_weights
+        map_w = runtime.mapping.loss_weights
+        map_lr = runtime.mapping.learning_rates
         loop = GS3LAMLoop(
             semantic_dim=self.config.paper_defaults.semantic.feature_dim,
             semantic_classes=self.config.paper_defaults.semantic.class_dim,
             keyframe_window=runtime.mapping.mapping_window_size,
+            tracking_iterations=runtime.tracking.iterations,
+            mapping_iterations=runtime.mapping.iterations,
+            tracking_rotation_lr=runtime.tracking.pose_rotation_lr,
+            tracking_translation_lr=runtime.tracking.pose_translation_lr,
+            tracking_loss_weights={
+                "color": track_w.color, "depth": track_w.depth, "semantic": track_w.semantic,
+            },
+            mapping_loss_weights={
+                "color": map_w.color, "depth": map_w.depth, "semantic": map_w.semantic,
+                "big_scale": map_w.big_scale, "small_scale": map_w.small_scale,
+            },
+            mapping_lr={
+                "means3d": map_lr.means3d, "rgb_colors": map_lr.rgb_colors,
+                "unnorm_rotations": map_lr.unnorm_rotations,
+                "logit_opacities": map_lr.logit_opacities,
+                "log_scales": map_lr.log_scales, "obj_dc": map_lr.obj_dc,
+            },
+            device=self.backend.accelerator if self.backend.accelerator != "metal" else "cpu",
         )
         self.sessions[request.session_id] = SessionState(
             session_id=request.session_id,

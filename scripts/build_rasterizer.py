@@ -9,6 +9,7 @@ Usage:
 """
 
 import os
+import subprocess
 import sys
 import shutil
 from pathlib import Path
@@ -31,7 +32,6 @@ except ImportError:
     os.system(f"{sys.executable} -m pip install ninja --quiet")  # noqa: S605
 
 # Use pip install which handles paths correctly
-import subprocess
 result = subprocess.run(
     [sys.executable, "-m", "pip", "install", "--no-user", "--no-build-isolation", str(rasterizer_dir)],
     env={**os.environ, "TORCH_CUDA_ARCH_LIST": "8.9"},
@@ -58,7 +58,7 @@ shared_dir = Path("/mnt/forge-data/modules/03_wave7/shared_slam_cuda")
 shared_dir.mkdir(parents=True, exist_ok=True)
 
 # Find the built extension
-import gaussian_semantic_rasterization as gsr
+import gaussian_semantic_rasterization as gsr  # noqa: E402
 src_pkg = Path(gsr.__file__).parent
 dst_pkg = shared_dir / "gaussian_semantic_rasterization"
 if dst_pkg.exists():

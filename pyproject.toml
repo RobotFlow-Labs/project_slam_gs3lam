@@ -22,6 +22,10 @@ dependencies = [
     "uvicorn>=0.30",
 ]
 
+[project.scripts]
+gs3lam-serve = "anima_slam_gs3lam.serve:main"
+gs3lam-export = "anima_slam_gs3lam.export:main"
+
 [project.optional-dependencies]
 mlx = ["mlx>=0.15"]
 cuda = [

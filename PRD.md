@@ -135,9 +135,9 @@ GS3LAM is a dense semantic RGB-D SLAM system built around a Semantic Gaussian Fi
 | [PRD-02](prds/PRD-02-core-model.md) | Core Model | ✅ |
 | [PRD-03](prds/PRD-03-inference.md) | Inference | ✅ |
 | [PRD-04](prds/PRD-04-evaluation.md) | Evaluation | ✅ |
-| [PRD-05](prds/PRD-05-api-docker.md) | API & Docker | 🟡 |
-| [PRD-06](prds/PRD-06-ros2-integration.md) | ROS2 Integration | 🟡 |
-| [PRD-07](prds/PRD-07-production.md) | Production | ⬜ |
+| [PRD-05](prds/PRD-05-api-docker.md) | API & Docker | ✅ |
+| [PRD-06](prds/PRD-06-ros2-integration.md) | ROS2 Integration | ✅ |
+| [PRD-07](prds/PRD-07-production.md) | Production | ✅ |
 
 ## 13. Task Breakdown
 - See `tasks/PRD-0101.md` through `tasks/PRD-0703.md`
