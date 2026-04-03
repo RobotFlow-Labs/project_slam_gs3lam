@@ -67,14 +67,29 @@ def expand_field_from_frame(
     field: SemanticGaussianField,
     frame: FrameBatch,
     unobserved_mask: torch.Tensor,
+    *,
+    max_new_gaussians: int = 50000,
 ) -> int:
-    """Append new Gaussians from unobserved RGB-D pixels."""
+    """Append new Gaussians from unobserved RGB-D pixels.
 
+    Caps new Gaussians per frame to ``max_new_gaussians`` via uniform subsampling
+    to prevent unbounded memory growth.
+    """
     world_points, colors = frame_to_world_points(frame, unobserved_mask)
     if world_points.shape[0] == 0:
         return 0
 
-    camera_points = torch.linalg.solve(frame.pose, torch.cat([world_points, torch.ones(world_points.shape[0], 1, device=world_points.device, dtype=world_points.dtype)], dim=-1).T).T[:, :3]
+    # Subsample if too many new points
+    n = world_points.shape[0]
+    if n > max_new_gaussians:
+        indices = torch.randperm(n, device=world_points.device)[:max_new_gaussians]
+        world_points = world_points[indices]
+        colors = colors[indices]
+
+    camera_points = torch.linalg.solve(
+        frame.pose,
+        torch.cat([world_points, torch.ones(world_points.shape[0], 1, device=world_points.device, dtype=world_points.dtype)], dim=-1).T,
+    ).T[:, :3]
     mean_sq_dist = estimate_mean_sq_dist(camera_points, frame.intrinsics)
     field.append_gaussians(world_points, colors, mean_sq_dist=mean_sq_dist)
     return int(world_points.shape[0])

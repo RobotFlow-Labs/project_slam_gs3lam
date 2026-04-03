@@ -97,10 +97,18 @@ class GS3LAMLoop:
             self.state.field, self.state.decoder, self.mapping_lr,
         )
 
-    def bootstrap(self, frame: FrameBatch) -> LoopState:
+    def bootstrap(self, frame: FrameBatch, *, max_init_points: int = 200000) -> LoopState:
         frame = frame.to(self.device)
         depth_mask = frame.depth[0] > 0
         world_points, colors = frame_to_world_points(frame, depth_mask)
+
+        # Subsample if too many initial points (L4 23GB can handle ~200K comfortably)
+        n = world_points.shape[0]
+        if n > max_init_points:
+            indices = torch.randperm(n, device=world_points.device)[:max_init_points]
+            world_points = world_points[indices]
+            colors = colors[indices]
+
         homogeneous = torch.cat(
             [world_points, torch.ones(world_points.shape[0], 1, device=self.device, dtype=world_points.dtype)],
             dim=-1,

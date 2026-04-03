@@ -95,3 +95,24 @@ class SnapshotResponse(BaseModel):
     num_poses: int
     last_pose_w2c: TensorPayload | None = None
     checkpoint_paths: list[str] = Field(default_factory=list)
+
+
+class ReadyResponse(BaseModel):
+    ready: bool
+    module: str = "slam-gs3lam"
+    version: str = "0.1.0"
+    weights_loaded: bool = False
+
+
+class InfoResponse(BaseModel):
+    module: str = "slam-gs3lam"
+    version: str = "0.1.0"
+    paper: str = "GS3LAM: Gaussian Semantic Splatting SLAM"
+    arxiv: str = "2603.27781"
+    domain: str = "slam"
+    wave: int = 7
+    capabilities: list[str] = Field(
+        default_factory=lambda: ["semantic_slam", "pose_estimation", "3d_reconstruction", "semantic_mapping"]
+    )
+    gpu_available: bool = False
+    active_sessions: int = 0
