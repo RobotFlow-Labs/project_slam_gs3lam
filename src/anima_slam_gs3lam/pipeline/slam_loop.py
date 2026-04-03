@@ -97,7 +97,7 @@ class GS3LAMLoop:
             self.state.field, self.state.decoder, self.mapping_lr,
         )
 
-    def bootstrap(self, frame: FrameBatch, *, max_init_points: int = 100000) -> LoopState:
+    def bootstrap(self, frame: FrameBatch, *, max_init_points: int = 50000) -> LoopState:
         frame = frame.to(self.device)
         depth_mask = frame.depth[0] > 0
         world_points, colors = frame_to_world_points(frame, depth_mask)
@@ -236,13 +236,23 @@ class GS3LAMLoop:
         # 4. Mapping: optimize field + decoder with frozen poses
         map_metrics = self._run_mapping(self.state.keyframes)
 
-        # 5. Periodic pruning: remove low-opacity Gaussians every 50 frames
+        # 5. Pruning: remove low-opacity Gaussians every 20 frames + hard cap at 300K
         pruned = 0
         step_num = len(self.state.poses)
-        if step_num > 0 and step_num % 50 == 0:
-            pruned = self.state.field.prune_low_opacity(threshold=0.01)
+        if step_num > 1 and step_num % 20 == 0:
+            pruned = self.state.field.prune_low_opacity(threshold=0.05)
             if pruned > 0:
                 self._rebuild_mapping_optimizer()
+        # Hard cap: if still over 300K, prune lowest opacity until under
+        max_gaussians = 300000
+        if self.state.field.num_gaussians > max_gaussians:
+            opacities = self.state.field.opacities().squeeze(-1)
+            _, sorted_idx = opacities.sort()
+            n_remove = self.state.field.num_gaussians - max_gaussians
+            remove_mask = torch.zeros(self.state.field.num_gaussians, dtype=torch.bool, device=self.device)
+            remove_mask[sorted_idx[:n_remove]] = True
+            pruned += self.state.field.prune(remove_mask)
+            self._rebuild_mapping_optimizer()
 
         return {
             "bootstrapped": False,
