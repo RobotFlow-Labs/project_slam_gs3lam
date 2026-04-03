@@ -1,0 +1,12 @@
+# L4-tuned config for Replica (23GB VRAM)
+# Reduced iterations + smaller init to fit in memory
+# Paper uses 40/60 on RTX 3090 (24GB) — we scale down for safety margin
+
+[project]
+name = "anima-slam-gs3lam"
+
+[paper_defaults]
+replica_tracking_iterations = 20
+replica_mapping_iterations = 15
+tracking_rotation_lr = 0.0004
+tracking_translation_lr = 0.002

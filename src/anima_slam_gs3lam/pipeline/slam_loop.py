@@ -97,7 +97,7 @@ class GS3LAMLoop:
             self.state.field, self.state.decoder, self.mapping_lr,
         )
 
-    def bootstrap(self, frame: FrameBatch, *, max_init_points: int = 50000) -> LoopState:
+    def bootstrap(self, frame: FrameBatch, *, max_init_points: int = 30000) -> LoopState:
         frame = frame.to(self.device)
         depth_mask = frame.depth[0] > 0
         world_points, colors = frame_to_world_points(frame, depth_mask)
@@ -244,7 +244,7 @@ class GS3LAMLoop:
             if pruned > 0:
                 self._rebuild_mapping_optimizer()
         # Hard cap: if still over 300K, prune lowest opacity until under
-        max_gaussians = 300000
+        max_gaussians = 150000
         if self.state.field.num_gaussians > max_gaussians:
             opacities = self.state.field.opacities().squeeze(-1)
             _, sorted_idx = opacities.sort()

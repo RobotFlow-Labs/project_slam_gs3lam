@@ -47,12 +47,13 @@ def main() -> None:
     parser.add_argument("--ckpt-every", type=int, default=100, help="Checkpoint every N frames")
     parser.add_argument("--eval-every", type=int, default=5, help="Eval metrics every N frames")
     parser.add_argument("--device", default="cuda", help="torch device")
+    parser.add_argument("--config", default="configs/default.toml", help="config file path")
     args = parser.parse_args()
 
     for d in [CKPT_DIR, LOG_DIR, REPORT_DIR]:
         d.mkdir(parents=True, exist_ok=True)
 
-    config = load_config()
+    config = load_config(args.config)
     runtime = config.build_runtime_config(
         "replica",
         sequence_override=args.scene,
